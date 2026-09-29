@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#115e59">
+<meta name="description" content="Dashboard ผลสุ่มนับยาประจำปี เปรียบเทียบยอดนับกับสต็อกแยกตามหน่วยจ่ายยา">
+<title>Count · ผลสุ่มนับยาประจำปี</title>
+<style>/* STYLES */</style>
+</head>
+<body>
+<header><div class="brand"><span class="brand-icon" aria-hidden="true">＋</span><div><strong>COUNT <span>/</span> Pharmacy inventory</strong><small>ระบบติดตามผลสุ่มนับยาประจำปี</small></div></div><span class="header-tag">ปีงบประมาณ 2569</span></header>
+<main>
+<section class="heading"><div><p class="eyebrow">STOCK COUNT OVERVIEW</p><h1>ผลสุ่มนับยาประจำปี</h1><p class="muted">รอบนับ 29 กันยายน 2569 · เทียบยอดระบบ ณ เวลาเก็บข้อมูล</p></div><div class="actions"><button id="print">พิมพ์รายงาน</button><button id="export" class="primary" disabled>ส่งออกตาราง CSV ↓</button></div></section>
+<details id="imports" class="panel import-panel" open><summary>จัดการข้อมูล <span id="source-summary">เลือกไฟล์ใบนับเพื่อเริ่มวิเคราะห์</span></summary><div class="import-grid">
+<label class="upload">01 <strong>ใบนับยา</strong><small>count_PHA01 / PHA02 / PHA04.csv<br>เลือกพร้อมกันได้ทั้ง 3 ไฟล์</small><input id="count-files" type="file" accept=".csv,text/csv" multiple></label>
+<label class="upload">02 <strong>ราคาและ VEN <span class="optional">(ถ้ามี)</span></strong><small>Random Year.csv หรือไฟล์หัวคอลัมน์เดียวกัน<br>ใช้รหัสยาเชื่อมข้อมูล</small><input id="master-file" type="file" accept=".csv,text/csv"></label>
+<div class="import-info"><strong>ข้อมูลประมวลผลในเครื่องคุณ</strong><p>ไฟล์ที่เลือกเพิ่มไม่ถูกส่งขึ้นเซิร์ฟเวอร์ เมื่อโหลดหน้าใหม่จะแสดงชุดข้อมูลที่เผยแพร่ไว้อีกครั้ง</p><button id="clear">ล้างข้อมูลในหน้านี้</button></div>
+</div><p id="message" role="status" aria-live="polite"></p></details>
+<div id="empty" class="empty panel"><div class="empty-icon" aria-hidden="true">▥</div><h2>เริ่มจากใบนับของคุณ</h2><p>เลือกไฟล์ CSV ด้านบน แล้วดูภาพรวม ความคลาดเคลื่อน<br>และเปรียบเทียบผลนับระหว่างหน่วยจ่ายยาได้ทันที</p><span class="pill">รองรับ UTF-8 จาก Excel</span></div>
+<div id="dashboard" hidden>
+<nav class="tabs" aria-label="มุมมองข้อมูล"><button class="active" data-tab="overview" aria-pressed="true">ภาพรวมผลนับ</button><button data-tab="details" aria-pressed="false">รายการยา</button><button data-tab="compare" aria-pressed="false">เทียบ PHA01 / PHA04</button></nav>
+<section class="filters panel" aria-label="ตัวกรอง"><label>หน่วยจ่ายยา<select id="dept"><option value="">ทุกหน่วยจ่ายยา</option><option value="PHA01">ห้องยาใน · PHA01</option><option value="PHA02">PHA02</option><option value="PHA04">ห้องยานอก · PHA04</option></select></label><label>กลุ่มยา<select id="group"><option value="">ทุกกลุ่ม</option></select></label><label>เหตุผลที่เลือกนับ<select id="type"><option value="">ทุกประเภท</option></select></label><label>VEN<select id="ven"><option value="">ทั้งหมด</option></select></label><label>เกณฑ์ความถูกต้อง<select id="tolerance"><option value="0">ตรงทุกหน่วย (0%)</option><option value="2">ยอมรับคลาดเคลื่อน ±2%</option></select></label><button id="reset">ล้างตัวกรอง</button></section>
+<p id="scope" class="scope"></p>
+<div class="notice"><span aria-hidden="true">ⓘ</span><div><strong>ผลต่างจากยอดระบบเป็นรายการที่ต้องตรวจสอบ</strong><br>ยอดระบบเป็น snapshot ช่วง 13:00–14:00 น. ของวันนับ การรับ–จ่ายระหว่างนับอาจทำให้ยอดต่างกัน ควรตรวจ CARD_SUBS ก่อนสรุปของขาดหรือเกิน</div></div>
+<section id="kpis" class="kpis" aria-label="ตัวชี้วัด"></section>
+<p id="coverage" class="muted coverage"></p>
+<section id="overview" class="view">
+<div class="charts"><article class="panel"><div class="panel-title"><div><p class="eyebrow">ACCURACY</p><h2>ความถูกต้องแยกหน่วยจ่ายยา</h2></div><span class="pill">% ของรายการที่นับแล้ว</span></div><div id="accuracy"></div><p class="footnote">Fentanyl, Morphine และ Midazolam ใช้เกณฑ์ตรงทุกหน่วยเสมอ ตามข้อกำหนดของโครงการ</p></article>
+<article class="panel"><div class="panel-title"><div><p class="eyebrow">PRIORITY REVIEW</p><h2>10 รายการผลต่างสูงสุด</h2></div><select id="rank" aria-label="จัดอันดับผลต่าง"><option value="value">ตามมูลค่า (บาท)</option><option value="quantity">ตามจำนวนหน่วย</option></select></div><div id="ranking"></div></article></div>
+<div class="charts lower"><article class="panel"><p class="eyebrow">BY DRUG GROUP</p><h2>ความถูกต้องตามกลุ่มยา</h2><div id="heatmap" class="table-wrap"></div></article><article class="panel"><p class="eyebrow">DATA REVIEW</p><h2>จุดที่ควรตรวจสอบ</h2><div id="review"></div></article></div>
+</section>
+<section id="details" class="view panel" hidden><div class="panel-title"><div><p class="eyebrow">COUNT DETAILS</p><h2>รายการผลนับ</h2></div><span id="row-count" class="pill"></span></div><div class="table-controls"><label class="search">ค้นหายา / รหัส / ตำแหน่ง<input id="search" type="search" placeholder="เช่น Azilsartan, 11AZCT4, กบ2"></label><label>สถานะ<select id="status"><option value="">ทุกสถานะ</option><option value="diff">ผลต่างไม่เป็นศูนย์</option><option value="fail">ไม่ผ่านเกณฑ์</option><option value="pending">ยังไม่นับ</option><option value="mismatch">SUBSTOCK ≠ รายล็อต</option><option value="controlled">ยาควบคุมที่กำหนด</option><option value="issues">สูตรเดิมไม่ตรง / ข้อมูลต้องทบทวน</option></select></label><label>เรียงตาม<select id="sort"><option value="difference">ผลต่างมากที่สุด (หน่วย)</option><option value="value">ผลต่างมากที่สุด (บาท)</option><option value="name">ชื่อยา</option><option value="location">ตำแหน่งวางยา</option></select></label></div><div id="detail-table" class="table-wrap"></div></section>
+<section id="compare" class="view panel" hidden><div class="panel-title"><div><p class="eyebrow">SIDE BY SIDE</p><h2>เทียบผลนับ PHA01 กับ PHA04</h2></div><label class="check"><input id="both-diff" type="checkbox"> ต่างจากระบบทั้งสองแผนก</label></div><p class="muted">ใช้ตัวกรองกลุ่มยา / เหตุผล / VEN ด้านบน และแสดงทั้งสองแผนกเสมอ · ผลต่างพร้อมกันยังไม่ยืนยันสาเหตุ</p><div id="compare-table" class="table-wrap"></div></section>
+<details class="panel methodology"><summary>วิธีคำนวณและขอบเขตข้อมูล</summary><ul><li>ยอดนับ = จำนวน pack ที่นับ × ขนาดบรรจุ + เศษหน่วยย่อย; ผลต่าง = ยอดนับ − SUBSTOCK</li><li>คอลัมน์ O ว่างหมายถึงยังไม่นับ ไม่ตีความเป็นศูนย์ และไม่นำเข้าตัวหารความถูกต้องหรือมูลค่าคลาดเคลื่อน</li><li>ความถูกต้อง = รายการที่ผ่านเกณฑ์ ÷ รายการที่นับแล้ว; ±2% เทียบกับค่าสัมบูรณ์ยอดระบบ ยอดระบบศูนย์ต้องนับได้ศูนย์</li><li>มูลค่าอ้างอิง = จำนวนหน่วย × (ราคา/บรรจุ ÷ PACK_RATIO); รายการไม่มีราคาไม่นับในยอดเงินและตัวหารมูลค่า</li><li>% มูลค่าผลต่าง = (มูลค่าขาด + มูลค่าเกิน) ÷ มูลค่าระบบแบบค่าสัมบูรณ์ของรายการที่นับแล้วและมีราคา ไม่หักขาด–เกินกลบกัน</li><li>ราคาเป็นราคาอ้างอิงจากไฟล์ที่เลือก ไม่ใช่ราคาต้นทุนรายล็อต ณ เวลานับ; ไม่ใช้ข้อมูล ABC</li><li>จำนวนรายการรวมเป็นคู่ยา–แผนก ยาชนิดเดียวในสองแผนกนับเป็นสองรายการ</li></ul></details>
+</div>
+<footer><span>COUNT · Pharmacy inventory review</span><span>ผลสุ่มนับประจำปี 2569 · หน่วยย่อยตามใบนับ</span></footer>
+</main>
+<noscript>โปรดเปิด JavaScript เพื่อใช้งาน Dashboard</noscript>
+<script id="initial-data" type="application/json">{"counts":{},"master":null}</script>
+<script>/* CORE */</script>
+<script>/* APP */</script>
+</body></html>

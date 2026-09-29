@@ -1,0 +1,13 @@
+{
+  "name": "pharmacy-stock-count",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/core.test.cjs",
+    "test:browser": "playwright test",
+    "build": "python build.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

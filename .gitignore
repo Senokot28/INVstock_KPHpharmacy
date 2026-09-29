@@ -1,0 +1,12 @@
+count_*.csv
+CLAUDE.md
+*.local.*
+__pycache__/
+node_modules/
+test-results/
+_bak/
+*.mdb
+*.ldb
+*.zip
+*.png
+tools/read_prices.py
